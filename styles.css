@@ -161,7 +161,10 @@ body {
     margin-bottom: 15px;
 }
 
-.gender-settings {
+.gender-settings,
+.height-settings,
+.grade-settings,
+.group-settings {
     background: #f7fafc;
     padding: 15px;
     border-radius: 8px;

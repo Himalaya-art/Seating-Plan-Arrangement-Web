@@ -76,6 +76,36 @@
                             <input type="radio" id="corridorArrange" name="arrangeType" value="corridor">
                             <label for="corridorArrange">按走廊排列</label>
                         </div>
+                        
+                        <div class="radio-group">
+                            <input type="radio" id="heightArrange" name="arrangeType" value="height">
+                            <label for="heightArrange">按身高排列</label>
+                        </div>
+                        
+                        <div class="radio-group">
+                            <input type="radio" id="studentIdArrange" name="arrangeType" value="studentId">
+                            <label for="studentIdArrange">按学号排列</label>
+                        </div>
+                        
+                        <div class="radio-group">
+                            <input type="radio" id="gradeArrange" name="arrangeType" value="grade">
+                            <label for="gradeArrange">按成绩排列</label>
+                        </div>
+                        
+                        <div class="radio-group">
+                            <input type="radio" id="snakeArrange" name="arrangeType" value="snake">
+                            <label for="snakeArrange">蛇形排列</label>
+                        </div>
+                        
+                        <div class="radio-group">
+                            <input type="radio" id="diagonalArrange" name="arrangeType" value="diagonal">
+                            <label for="diagonalArrange">对角线排列</label>
+                        </div>
+                        
+                        <div class="radio-group">
+                            <input type="radio" id="groupArrange" name="arrangeType" value="group">
+                            <label for="groupArrange">分组排列</label>
+                        </div>
                     </div>
 
                     <!-- Gender Settings -->
@@ -83,6 +113,52 @@
                         <div class="form-group">
                             <label for="genderGroup">连续性别数量</label>
                             <input type="number" id="genderGroup" value="3" min="1" max="10">
+                        </div>
+                    </div>
+                    
+                    <!-- Height Settings -->
+                    <div class="height-settings" style="display: none;">
+                        <div class="form-group">
+                            <div class="radio-group">
+                                <input type="radio" id="heightAsc" name="heightOrder" value="asc" checked>
+                                <label for="heightAsc">从矮到高</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="heightDesc" name="heightOrder" value="desc">
+                                <label for="heightDesc">从高到矮</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Grade Settings -->
+                    <div class="grade-settings" style="display: none;">
+                        <div class="form-group">
+                            <div class="radio-group">
+                                <input type="radio" id="gradeAsc" name="gradeOrder" value="asc">
+                                <label for="gradeAsc">从低到高</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="gradeDesc" name="gradeOrder" value="desc" checked>
+                                <label for="gradeDesc">从高到低</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Group Settings -->
+                    <div class="group-settings" style="display: none;">
+                        <div class="form-group">
+                            <label for="groupSize">每组人数</label>
+                            <input type="number" id="groupSize" value="4" min="2" max="8">
+                        </div>
+                        <div class="form-group">
+                            <div class="radio-group">
+                                <input type="radio" id="groupMixed" name="groupType" value="mixed" checked>
+                                <label for="groupMixed">混合分组</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="groupGender" name="groupType" value="gender">
+                                <label for="groupGender">按性别分组</label>
+                            </div>
                         </div>
                     </div>
                 </div>

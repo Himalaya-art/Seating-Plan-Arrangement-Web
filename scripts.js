@@ -110,7 +110,10 @@ class SeatingArrangement {
                             if (row.length >= 2 && row[0] && row[1]) {
                                 students.set(index + 1, {
                                     name: row[0].toString(),
-                                    gender: this.normalizeGender(row[1].toString())
+                                    gender: this.normalizeGender(row[1].toString()),
+                                    height: row[2] ? parseFloat(row[2]) : (Math.random() * 20 + 155), // 随机身高155-175cm
+                                    studentId: row[3] ? row[3].toString() : String(index + 1).padStart(6, '0'),
+                                    grade: row[4] ? parseFloat(row[4]) : (Math.random() * 40 + 60) // 随机成绩60-100
                                 });
                             }
                         });
@@ -124,7 +127,10 @@ class SeatingArrangement {
                             if (parts.length >= 2) {
                                 students.set(index + 1, {
                                     name: parts[0],
-                                    gender: this.normalizeGender(parts[1])
+                                    gender: this.normalizeGender(parts[1]),
+                                    height: parts[2] ? parseFloat(parts[2]) : (Math.random() * 20 + 155),
+                                    studentId: parts[3] ? parts[3] : String(index + 1).padStart(6, '0'),
+                                    grade: parts[4] ? parseFloat(parts[4]) : (Math.random() * 40 + 60)
                                 });
                             }
                         });
@@ -138,7 +144,10 @@ class SeatingArrangement {
                             if (parts.length >= 2) {
                                 students.set(index + 1, {
                                     name: parts[0],
-                                    gender: this.normalizeGender(parts[1])
+                                    gender: this.normalizeGender(parts[1]),
+                                    height: parts[2] ? parseFloat(parts[2]) : (Math.random() * 20 + 155),
+                                    studentId: parts[3] ? parts[3] : String(index + 1).padStart(6, '0'),
+                                    grade: parts[4] ? parseFloat(parts[4]) : (Math.random() * 40 + 60)
                                 });
                             }
                         });
@@ -201,11 +210,25 @@ class SeatingArrangement {
     handleArrangeTypeChange() {
         const selectedType = document.querySelector('input[name="arrangeType"]:checked').value;
         const genderSettings = document.querySelector('.gender-settings');
+        const heightSettings = document.querySelector('.height-settings');
+        const gradeSettings = document.querySelector('.grade-settings');
+        const groupSettings = document.querySelector('.group-settings');
         
+        // 隐藏所有设置面板
+        genderSettings.style.display = 'none';
+        heightSettings.style.display = 'none';
+        gradeSettings.style.display = 'none';
+        groupSettings.style.display = 'none';
+        
+        // 显示对应的设置面板
         if (selectedType === 'gender') {
             genderSettings.style.display = 'block';
-        } else {
-            genderSettings.style.display = 'none';
+        } else if (selectedType === 'height') {
+            heightSettings.style.display = 'block';
+        } else if (selectedType === 'grade') {
+            gradeSettings.style.display = 'block';
+        } else if (selectedType === 'group') {
+            groupSettings.style.display = 'block';
         }
     }
 
@@ -262,6 +285,10 @@ class SeatingArrangement {
             deskRightSit: document.getElementById('rightDesk').checked,
             arrangeType: arrangeType,
             genderGroupSize: parseInt(document.getElementById('genderGroup').value),
+            heightOrder: document.querySelector('input[name="heightOrder"]:checked')?.value || 'asc',
+            gradeOrder: document.querySelector('input[name="gradeOrder"]:checked')?.value || 'desc',
+            groupSize: parseInt(document.getElementById('groupSize')?.value || 4),
+            groupType: document.querySelector('input[name="groupType"]:checked')?.value || 'mixed',
             corridor: corridor
         };
     }
@@ -303,6 +330,24 @@ class SeatingArrangement {
                 break;
             case 'corridor':
                 seatAssignments = this.arrangeByCorridor(params, students);
+                break;
+            case 'height':
+                seatAssignments = this.arrangeByHeight(params, students);
+                break;
+            case 'studentId':
+                seatAssignments = this.arrangeByStudentId(params, students);
+                break;
+            case 'grade':
+                seatAssignments = this.arrangeByGrade(params, students);
+                break;
+            case 'snake':
+                seatAssignments = this.arrangeBySnake(params, students);
+                break;
+            case 'diagonal':
+                seatAssignments = this.arrangeByDiagonal(params, students);
+                break;
+            case 'group':
+                seatAssignments = this.arrangeByGroup(params, students);
                 break;
             default:
                 seatAssignments = this.arrangeRandomly(students);
@@ -444,6 +489,235 @@ class SeatingArrangement {
         studentArray.forEach((student, index) => {
             assignments[index] = student;
         });
+
+        return assignments;
+    }
+
+    // 按身高排列
+    arrangeByHeight(params, students) {
+        const assignments = {};
+        const studentArray = Array.from(students.values()).map((student, index) => ({
+            id: Array.from(students.keys())[index],
+            ...student
+        }));
+        
+        // 按身高排序
+        studentArray.sort((a, b) => {
+            if (params.heightOrder === 'desc') {
+                return b.height - a.height; // 从高到矮
+            } else {
+                return a.height - b.height; // 从矮到高
+            }
+        });
+        
+        studentArray.forEach((student, index) => {
+            assignments[index] = student;
+        });
+
+        return assignments;
+    }
+
+    // 按学号排列
+    arrangeByStudentId(params, students) {
+        const assignments = {};
+        const studentArray = Array.from(students.values()).map((student, index) => ({
+            id: Array.from(students.keys())[index],
+            ...student
+        }));
+        
+        // 按学号排序
+        studentArray.sort((a, b) => {
+            return a.studentId.localeCompare(b.studentId);
+        });
+        
+        studentArray.forEach((student, index) => {
+            assignments[index] = student;
+        });
+
+        return assignments;
+    }
+
+    // 按成绩排列
+    arrangeByGrade(params, students) {
+        const assignments = {};
+        const studentArray = Array.from(students.values()).map((student, index) => ({
+            id: Array.from(students.keys())[index],
+            ...student
+        }));
+        
+        // 按成绩排序
+        studentArray.sort((a, b) => {
+            if (params.gradeOrder === 'asc') {
+                return a.grade - b.grade; // 从低到高
+            } else {
+                return b.grade - a.grade; // 从高到低
+            }
+        });
+        
+        studentArray.forEach((student, index) => {
+            assignments[index] = student;
+        });
+
+        return assignments;
+    }
+
+    // 蛇形排列
+    arrangeBySnake(params, students) {
+        const assignments = {};
+        const studentArray = Array.from(students.values()).map((student, index) => ({
+            id: Array.from(students.keys())[index],
+            ...student
+        }));
+        
+        this.shuffleArray(studentArray);
+        
+        const availableSeats = (params.cols - params.corridor.length) * params.rows;
+        const seatPositions = [];
+        
+        // 生成蛇形位置序列
+        let seatIndex = 0;
+        for (let row = 0; row < params.rows; row++) {
+            if (row % 2 === 0) {
+                // 偶数行从左到右
+                for (let col = 0; col < params.cols; col++) {
+                    if (!params.corridor.includes(col + 1)) {
+                        seatPositions.push(seatIndex);
+                        seatIndex++;
+                    }
+                }
+            } else {
+                // 奇数行从右到左
+                for (let col = params.cols - 1; col >= 0; col--) {
+                    if (!params.corridor.includes(col + 1)) {
+                        seatPositions.push(seatIndex);
+                        seatIndex++;
+                    }
+                }
+            }
+        }
+        
+        // 分配学生到蛇形位置
+        studentArray.slice(0, Math.min(studentArray.length, seatPositions.length)).forEach((student, index) => {
+            assignments[seatPositions[index]] = student;
+        });
+
+        return assignments;
+    }
+
+    // 对角线排列
+    arrangeByDiagonal(params, students) {
+        const assignments = {};
+        const studentArray = Array.from(students.values()).map((student, index) => ({
+            id: Array.from(students.keys())[index],
+            ...student
+        }));
+        
+        this.shuffleArray(studentArray);
+        
+        const seatPositions = [];
+        
+        // 生成对角线位置序列
+        let seatIndex = 0;
+        for (let diagonal = 0; diagonal < params.rows + params.cols - 1; diagonal++) {
+            for (let row = 0; row < params.rows; row++) {
+                const col = diagonal - row;
+                if (col >= 0 && col < params.cols && !params.corridor.includes(col + 1)) {
+                    seatPositions.push(seatIndex);
+                    seatIndex++;
+                }
+            }
+        }
+        
+        // 分配学生到对角线位置
+        studentArray.slice(0, Math.min(studentArray.length, seatPositions.length)).forEach((student, index) => {
+            assignments[seatPositions[index]] = student;
+        });
+
+        return assignments;
+    }
+
+    // 分组排列
+    arrangeByGroup(params, students) {
+        const assignments = {};
+        const males = [];
+        const females = [];
+        
+        // 按性别分组
+        for (const [id, student] of students) {
+            if (student.gender === '男') {
+                males.push({ id, ...student });
+            } else {
+                females.push({ id, ...student });
+            }
+        }
+        
+        this.shuffleArray(males);
+        this.shuffleArray(females);
+        
+        const availableSeats = (params.cols - params.corridor.length) * params.rows;
+        let seatIndex = 0;
+        
+        if (params.groupType === 'mixed') {
+            // 混合分组
+            const allStudents = [...males, ...females];
+            this.shuffleArray(allStudents);
+            
+            // 按组大小分配
+            for (let i = 0; i < allStudents.length && seatIndex < availableSeats; i += params.groupSize) {
+                const group = allStudents.slice(i, i + params.groupSize);
+                
+                // 为这个组分配连续的座位
+                group.forEach(student => {
+                    if (seatIndex < availableSeats) {
+                        assignments[seatIndex] = student;
+                        seatIndex++;
+                    }
+                });
+                
+                // 在组之间留一个空位（如果有的话）
+                if (seatIndex < availableSeats && i + params.groupSize < allStudents.length) {
+                    seatIndex++;
+                }
+            }
+        } else {
+            // 按性别分组
+            const maleGroups = [];
+            const femaleGroups = [];
+            
+            // 分男生组
+            for (let i = 0; i < males.length; i += params.groupSize) {
+                maleGroups.push(males.slice(i, i + params.groupSize));
+            }
+            
+            // 分女生组
+            for (let i = 0; i < females.length; i += params.groupSize) {
+                femaleGroups.push(females.slice(i, i + params.groupSize));
+            }
+            
+            // 交替安排男女组
+            const allGroups = [];
+            const maxGroups = Math.max(maleGroups.length, femaleGroups.length);
+            
+            for (let i = 0; i < maxGroups; i++) {
+                if (i < maleGroups.length) allGroups.push(maleGroups[i]);
+                if (i < femaleGroups.length) allGroups.push(femaleGroups[i]);
+            }
+            
+            // 分配座位
+            allGroups.forEach((group, groupIndex) => {
+                group.forEach(student => {
+                    if (seatIndex < availableSeats) {
+                        assignments[seatIndex] = student;
+                        seatIndex++;
+                    }
+                });
+                
+                // 在组之间留空位
+                if (groupIndex < allGroups.length - 1 && seatIndex < availableSeats) {
+                    seatIndex++;
+                }
+            });
+        }
 
         return assignments;
     }
