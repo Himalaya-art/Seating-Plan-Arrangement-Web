@@ -481,42 +481,122 @@ class SeatingArrangement {
         }
     }
 
-    // 渲染座位网格
+    // 渲染整合的座位布局
     renderSeatingGrid(params) {
-        const grid = document.getElementById('seatingGrid');
-        grid.innerHTML = '';
-        grid.style.gridTemplateColumns = `repeat(${params.cols}, 1fr)`;
+        const seatingArea = document.getElementById('seatingArea');
+        seatingArea.innerHTML = '';
 
-        // 渲染讲台座位
-        this.renderTeacherSeats(params);
+        // 创建整合布局容器
+        const layout = document.createElement('div');
+        layout.className = 'integrated-layout';
+        layout.style.gridTemplateColumns = `repeat(${params.cols}, 1fr)`;
 
-        // 渲染普通座位
+        // 添加黑板
+        const blackboard = document.createElement('div');
+        blackboard.className = 'blackboard-row';
+        blackboard.textContent = '黑板';
+        layout.appendChild(blackboard);
+
+        // 添加讲台区域（如果有护法座位）
+        if (params.deskLeftSit || params.deskRightSit) {
+            const podiumRow = this.createPodiumRow(params);
+            layout.appendChild(podiumRow);
+        }
+
+        // 添加普通座位
         for (let row = 0; row < params.rows; row++) {
             for (let col = 0; col < params.cols; col++) {
                 const seat = this.createSeatElement(row, col, params);
-                grid.appendChild(seat);
+                layout.appendChild(seat);
             }
         }
+
+        seatingArea.appendChild(layout);
     }
 
-    // 渲染讲台座位
-    renderTeacherSeats(params) {
-        const leftTeacher = document.getElementById('leftTeacher');
-        const rightTeacher = document.getElementById('rightTeacher');
+    // 创建讲台行
+    createPodiumRow(params) {
+        const podiumRow = document.createElement('div');
+        podiumRow.className = 'podium-row';
+        podiumRow.style.gridTemplateColumns = `repeat(${params.cols}, 1fr)`;
 
-        leftTeacher.textContent = '';
-        rightTeacher.textContent = '';
-        leftTeacher.className = 'teacher-seat left';
-        rightTeacher.className = 'teacher-seat right';
+        const middleCol = Math.floor(params.cols / 2);
 
-        if (this.seatingResult.left) {
-            leftTeacher.textContent = this.seatingResult.left.name;
-            leftTeacher.classList.add('occupied');
+        for (let col = 0; col < params.cols; col++) {
+            const element = document.createElement('div');
+            
+            if (col === middleCol - 1 && params.deskLeftSit) {
+                // 左护法
+                element.className = 'teacher-seat left';
+                element.dataset.position = 'left';
+                if (this.seatingResult.left) {
+                    element.textContent = this.seatingResult.left.name;
+                    element.classList.add('occupied');
+                } else {
+                    element.textContent = '左护法';
+                }
+                
+                // 添加编辑功能
+                element.addEventListener('click', () => {
+                    if (this.isEditMode) {
+                        this.editTeacherSeat('left', element);
+                    }
+                });
+            } else if (col === middleCol) {
+                // 讲台
+                element.className = 'podium';
+                element.textContent = '讲台';
+            } else if (col === middleCol + 1 && params.deskRightSit) {
+                // 右护法
+                element.className = 'teacher-seat right';
+                element.dataset.position = 'right';
+                if (this.seatingResult.right) {
+                    element.textContent = this.seatingResult.right.name;
+                    element.classList.add('occupied');
+                } else {
+                    element.textContent = '右护法';
+                }
+                
+                // 添加编辑功能
+                element.addEventListener('click', () => {
+                    if (this.isEditMode) {
+                        this.editTeacherSeat('right', element);
+                    }
+                });
+            } else {
+                // 空位置
+                element.style.width = '50px';
+                element.style.height = '40px';
+            }
+            
+            podiumRow.appendChild(element);
         }
 
-        if (this.seatingResult.right) {
-            rightTeacher.textContent = this.seatingResult.right.name;
-            rightTeacher.classList.add('occupied');
+        return podiumRow;
+    }
+
+    // 编辑讲台座位
+    editTeacherSeat(position, element) {
+        const currentName = element.classList.contains('occupied') ? element.textContent : '';
+        const newName = prompt(`请输入${position === 'left' ? '左护法' : '右护法'}姓名（留空清除）:`, currentName);
+        
+        if (newName !== null) {
+            if (newName.trim() === '') {
+                // 清除座位
+                delete this.seatingResult[position];
+                element.textContent = position === 'left' ? '左护法' : '右护法';
+                element.classList.remove('occupied');
+            } else {
+                // 设置学生
+                this.seatingResult[position] = {
+                    name: newName.trim(),
+                    gender: '未知'
+                };
+                element.textContent = newName.trim();
+                element.classList.add('occupied');
+            }
+            
+            this.updateStatistics();
         }
     }
 
@@ -598,18 +678,21 @@ class SeatingArrangement {
         this.isEditMode = !this.isEditMode;
         const btn = document.getElementById('editModeBtn');
         const seats = document.querySelectorAll('.seat:not(.corridor)');
+        const teacherSeats = document.querySelectorAll('.teacher-seat');
 
         if (this.isEditMode) {
             btn.innerHTML = '<i class="fas fa-check"></i> 完成编辑';
             btn.classList.add('btn-primary');
             btn.classList.remove('btn-secondary');
             seats.forEach(seat => seat.classList.add('editable'));
+            teacherSeats.forEach(seat => seat.classList.add('editable'));
             this.showToast('已进入编辑模式，点击座位可修改', 'success');
         } else {
             btn.innerHTML = '<i class="fas fa-edit"></i> 编辑模式';
             btn.classList.add('btn-secondary');
             btn.classList.remove('btn-primary');
             seats.forEach(seat => seat.classList.remove('editable'));
+            teacherSeats.forEach(seat => seat.classList.remove('editable'));
             this.showToast('已退出编辑模式', 'success');
         }
     }
@@ -641,9 +724,7 @@ class SeatingArrangement {
         if (confirm('确定要清空所有数据吗？')) {
             this.students.clear();
             this.seatingResult = null;
-            document.getElementById('seatingGrid').innerHTML = '';
-            document.getElementById('leftTeacher').textContent = '';
-            document.getElementById('rightTeacher').textContent = '';
+            document.getElementById('seatingArea').innerHTML = '';
             document.getElementById('fileInput').value = '';
             document.getElementById('fileInfo').textContent = '';
             document.getElementById('exportBtn').style.display = 'none';
@@ -715,38 +796,165 @@ class SeatingArrangement {
 
     // 导出到PNG
     exportToPNG() {
+        const seatingArea = document.getElementById('seatingArea');
+        if (!seatingArea) {
+            this.showToast('没有找到座位布局', 'error');
+            return;
+        }
+
+        // 使用html2canvas库导出整个座位区域
+        // 如果没有html2canvas，则使用fallback方法
+        if (typeof html2canvas !== 'undefined') {
+            html2canvas(seatingArea, {
+                backgroundColor: '#f7fafc',
+                scale: 2,
+                useCORS: true
+            }).then(canvas => {
+                canvas.toBlob(blob => {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = '座位安排表.png';
+                    link.click();
+                }, 'image/png');
+            });
+        } else {
+            // Fallback: 使用Canvas绘制
+            this.exportToPNGCanvas();
+        }
+    }
+
+    // Canvas绘制PNG
+    exportToPNGCanvas() {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        const data = this.prepareExportData();
+        const params = this.getParameters();
         
-        // 设置画布尺寸
+        // 计算画布尺寸
         const cellWidth = 80;
-        const cellHeight = 40;
-        canvas.width = data[0].length * cellWidth;
-        canvas.height = data.length * cellHeight;
+        const cellHeight = 50;
+        const padding = 20;
+        const blackboardHeight = 60;
+        const podiumHeight = params.deskLeftSit || params.deskRightSit ? 50 : 0;
         
-        // 设置字体
-        ctx.font = '14px Arial, sans-serif';
+        canvas.width = params.cols * cellWidth + padding * 2;
+        canvas.height = blackboardHeight + podiumHeight + params.rows * cellHeight + padding * 2;
+        
+        // 设置背景
+        ctx.fillStyle = '#f7fafc';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        let currentY = padding;
+        
+        // 绘制黑板
+        ctx.fillStyle = '#2d3748';
+        ctx.fillRect(padding, currentY, params.cols * cellWidth, blackboardHeight);
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 18px Arial, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+        ctx.fillText('黑板', canvas.width / 2, currentY + blackboardHeight / 2);
         
-        // 绘制表格
-        data.forEach((row, rowIndex) => {
-            row.forEach((cell, colIndex) => {
-                const x = colIndex * cellWidth;
-                const y = rowIndex * cellHeight;
+        currentY += blackboardHeight + 10;
+        
+        // 绘制讲台区域
+        if (params.deskLeftSit || params.deskRightSit) {
+            const middleCol = Math.floor(params.cols / 2);
+            
+            for (let col = 0; col < params.cols; col++) {
+                const x = padding + col * cellWidth;
                 
-                // 绘制边框
-                ctx.strokeStyle = '#ccc';
-                ctx.strokeRect(x, y, cellWidth, cellHeight);
-                
-                // 绘制内容
-                if (cell) {
-                    ctx.fillStyle = '#333';
-                    ctx.fillText(cell, x + cellWidth/2, y + cellHeight/2);
+                if (col === middleCol - 1 && params.deskLeftSit) {
+                    // 左护法
+                    ctx.fillStyle = this.seatingResult.left ? '#667eea' : '#4a5568';
+                    ctx.fillRect(x, currentY, cellWidth, podiumHeight);
+                    ctx.strokeStyle = '#667eea';
+                    ctx.strokeRect(x, currentY, cellWidth, podiumHeight);
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = '12px Arial, sans-serif';
+                    ctx.textAlign = 'center';
+                    const text = this.seatingResult.left ? this.seatingResult.left.name : '左护法';
+                    ctx.fillText(text, x + cellWidth/2, currentY + podiumHeight/2);
+                } else if (col === middleCol) {
+                    // 讲台
+                    ctx.fillStyle = '#667eea';
+                    ctx.fillRect(x, currentY, cellWidth, podiumHeight);
+                    ctx.strokeStyle = '#667eea';
+                    ctx.strokeRect(x, currentY, cellWidth, podiumHeight);
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold 14px Arial, sans-serif';
+                    ctx.fillText('讲台', x + cellWidth/2, currentY + podiumHeight/2);
+                } else if (col === middleCol + 1 && params.deskRightSit) {
+                    // 右护法
+                    ctx.fillStyle = this.seatingResult.right ? '#667eea' : '#4a5568';
+                    ctx.fillRect(x, currentY, cellWidth, podiumHeight);
+                    ctx.strokeStyle = '#667eea';
+                    ctx.strokeRect(x, currentY, cellWidth, podiumHeight);
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = '12px Arial, sans-serif';
+                    const text = this.seatingResult.right ? this.seatingResult.right.name : '右护法';
+                    ctx.fillText(text, x + cellWidth/2, currentY + podiumHeight/2);
                 }
-            });
-        });
+            }
+            
+            currentY += podiumHeight + 10;
+        }
+        
+        // 绘制学生座位
+        ctx.font = '12px Arial, sans-serif';
+        for (let row = 0; row < params.rows; row++) {
+            for (let col = 0; col < params.cols; col++) {
+                const x = padding + col * cellWidth;
+                const y = currentY + row * cellHeight;
+                const key = `${row},${col}`;
+                const seatData = this.seatingResult[key];
+                
+                // 设置颜色
+                if (seatData) {
+                    if (seatData.type === 'corridor') {
+                        ctx.fillStyle = '#2d3748';
+                        ctx.fillRect(x, y, cellWidth, cellHeight);
+                        ctx.fillStyle = 'white';
+                        ctx.fillText('走廊', x + cellWidth/2, y + cellHeight/2);
+                    } else if (seatData.type === 'empty') {
+                        ctx.fillStyle = '#e2e8f0';
+                        ctx.fillRect(x, y, cellWidth, cellHeight);
+                        ctx.strokeStyle = '#cbd5e0';
+                        ctx.setLineDash([5, 5]);
+                        ctx.strokeRect(x, y, cellWidth, cellHeight);
+                        ctx.setLineDash([]);
+                    } else {
+                        // 学生座位
+                        if (seatData.gender === '男') {
+                            ctx.fillStyle = '#c6f6d5';
+                            ctx.strokeStyle = '#38a169';
+                        } else if (seatData.gender === '女') {
+                            ctx.fillStyle = '#fbb6ce';
+                            ctx.strokeStyle = '#d53f8c';
+                        } else {
+                            ctx.fillStyle = '#bee3f8';
+                            ctx.strokeStyle = '#3182ce';
+                        }
+                        
+                        ctx.fillRect(x, y, cellWidth, cellHeight);
+                        ctx.strokeRect(x, y, cellWidth, cellHeight);
+                        
+                        ctx.fillStyle = '#333';
+                        ctx.fillText(seatData.name, x + cellWidth/2, y + cellHeight/2);
+                    }
+                } else {
+                    // 空座位
+                    ctx.fillStyle = '#e2e8f0';
+                    ctx.fillRect(x, y, cellWidth, cellHeight);
+                    ctx.strokeStyle = '#cbd5e0';
+                    ctx.setLineDash([5, 5]);
+                    ctx.strokeRect(x, y, cellWidth, cellHeight);
+                    ctx.setLineDash([]);
+                }
+            }
+        }
         
         // 下载图片
         canvas.toBlob(blob => {

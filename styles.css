@@ -258,47 +258,78 @@ body {
     gap: 10px;
 }
 
-/* 黑板 */
-.blackboard {
+/* 整合座位区域 */
+.seating-area {
+    background: #f7fafc;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.integrated-layout {
+    display: grid;
+    gap: 8px;
+    justify-items: center;
+    width: 100%;
+}
+
+/* 黑板样式 */
+.blackboard-row {
+    grid-column: 1 / -1;
     background: #2d3748;
     color: white;
     border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 30px;
+    padding: 15px;
+    margin-bottom: 15px;
     text-align: center;
-}
-
-.blackboard-content span {
     font-size: 1.2rem;
     font-weight: 600;
-    margin-bottom: 15px;
-    display: block;
+    width: 100%;
 }
 
-.teacher-area {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    margin-top: 15px;
+/* 讲台区域样式 */
+.podium-row {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 8px;
+    justify-items: center;
+    margin-bottom: 15px;
+    width: 100%;
 }
 
 .teacher-seat {
-    width: 60px;
+    width: 50px;
     height: 40px;
     background: #4a5568;
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 500;
     border: 2px solid #667eea;
     transition: all 0.3s ease;
+    color: white;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .teacher-seat.occupied {
     background: #667eea;
     color: white;
+}
+
+.teacher-seat:hover:not(.occupied) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.teacher-seat.editable {
+    border-color: #f56565;
+    animation: pulse 1.5s infinite;
 }
 
 .podium {
@@ -307,17 +338,7 @@ body {
     padding: 10px 20px;
     border-radius: 8px;
     font-weight: 600;
-}
-
-/* 座位网格 */
-.seating-grid {
-    display: grid;
-    gap: 8px;
-    margin-bottom: 20px;
-    justify-items: center;
-    padding: 20px;
-    background: #f7fafc;
-    border-radius: 10px;
+    font-size: 0.9rem;
 }
 
 .seat {
