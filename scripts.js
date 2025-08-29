@@ -532,6 +532,12 @@ class SeatingArrangement {
                 if (this.seatingResult.left) {
                     element.textContent = this.seatingResult.left.name;
                     element.classList.add('occupied');
+                    // 添加性别颜色
+                    if (this.seatingResult.left.gender === '男') {
+                        element.classList.add('male');
+                    } else if (this.seatingResult.left.gender === '女') {
+                        element.classList.add('female');
+                    }
                 } else {
                     element.textContent = '左护法';
                 }
@@ -553,6 +559,12 @@ class SeatingArrangement {
                 if (this.seatingResult.right) {
                     element.textContent = this.seatingResult.right.name;
                     element.classList.add('occupied');
+                    // 添加性别颜色
+                    if (this.seatingResult.right.gender === '男') {
+                        element.classList.add('male');
+                    } else if (this.seatingResult.right.gender === '女') {
+                        element.classList.add('female');
+                    }
                 } else {
                     element.textContent = '右护法';
                 }
@@ -585,19 +597,48 @@ class SeatingArrangement {
                 // 清除座位
                 delete this.seatingResult[position];
                 element.textContent = position === 'left' ? '左护法' : '右护法';
-                element.classList.remove('occupied');
+                element.className = `teacher-seat ${position}`;
             } else {
+                // 检测学生性别
+                const studentGender = this.detectStudentGender(newName.trim());
+                
                 // 设置学生
                 this.seatingResult[position] = {
                     name: newName.trim(),
-                    gender: '未知'
+                    gender: studentGender
                 };
                 element.textContent = newName.trim();
-                element.classList.add('occupied');
+                element.className = `teacher-seat ${position} occupied`;
+                
+                // 添加性别颜色
+                if (studentGender === '男') {
+                    element.classList.add('male');
+                } else if (studentGender === '女') {
+                    element.classList.add('female');
+                }
             }
             
             this.updateStatistics();
         }
+    }
+    
+    // 检测学生性别
+    detectStudentGender(name) {
+        // 首先从已有学生列表中查找
+        for (const [id, student] of this.students) {
+            if (student.name === name) {
+                return student.gender;
+            }
+        }
+        
+        // 如果找不到，提示用户选择性别
+        const gender = prompt(`未找到学生"${name}"的性别信息，请选择性别（输入"男"或"女"，留空为未知）:`);
+        if (gender && (gender.includes('男') || gender.toLowerCase().includes('male'))) {
+            return '男';
+        } else if (gender && (gender.includes('女') || gender.toLowerCase().includes('female'))) {
+            return '女';
+        }
+        return '未知';
     }
 
     // 创建座位元素
@@ -803,8 +844,59 @@ class SeatingArrangement {
 
     // 导出到Excel
     exportToExcel() {
-        const data = this.prepareExportData();
+        const { data, genderData } = this.prepareExportDataWithGender();
         const ws = XLSX.utils.aoa_to_sheet(data);
+        
+        // 设置单元格样式
+        if (!ws['!merges']) ws['!merges'] = [];
+        if (!ws['!cols']) ws['!cols'] = [];
+        
+        // 为每个单元格设置样式
+        Object.keys(ws).forEach(cell => {
+            if (cell[0] === '!') return; // 跳过元数据
+            
+            const cellRef = XLSX.utils.decode_cell(cell);
+            const row = cellRef.r;
+            const col = cellRef.c;
+            
+            if (genderData[row] && genderData[row][col]) {
+                const gender = genderData[row][col];
+                
+                // 设置单元格样式
+                if (!ws[cell].s) ws[cell].s = {};
+                
+                if (gender === '男') {
+                    ws[cell].s.fill = {
+                        fgColor: { rgb: "C6F6D5" },
+                        bgColor: { rgb: "C6F6D5" },
+                        patternType: "solid"
+                    };
+                    ws[cell].s.font = { color: { rgb: "22543D" } };
+                } else if (gender === '女') {
+                    ws[cell].s.fill = {
+                        fgColor: { rgb: "FBB6CE" },
+                        bgColor: { rgb: "FBB6CE" },
+                        patternType: "solid"
+                    };
+                    ws[cell].s.font = { color: { rgb: "97266D" } };
+                } else if (gender === '走廊') {
+                    ws[cell].s.fill = {
+                        fgColor: { rgb: "718096" },
+                        bgColor: { rgb: "718096" },
+                        patternType: "solid"
+                    };
+                    ws[cell].s.font = { color: { rgb: "FFFFFF" } };
+                } else if (gender === '讲台') {
+                    ws[cell].s.fill = {
+                        fgColor: { rgb: "667EEA" },
+                        bgColor: { rgb: "667EEA" },
+                        patternType: "solid"
+                    };
+                    ws[cell].s.font = { color: { rgb: "FFFFFF" }, bold: true };
+                }
+            }
+        });
+        
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, '座位表');
         XLSX.writeFile(wb, '座位安排表.xlsx');
@@ -895,12 +987,34 @@ class SeatingArrangement {
                 
                 if (col === middleCol - 1 && params.deskLeftSit) {
                     // 左护法
-                    ctx.fillStyle = this.seatingResult.left ? '#667eea' : '#4a5568';
+                    if (this.seatingResult.left) {
+                        if (this.seatingResult.left.gender === '男') {
+                            ctx.fillStyle = '#c6f6d5';
+                            ctx.strokeStyle = '#38a169';
+                        } else if (this.seatingResult.left.gender === '女') {
+                            ctx.fillStyle = '#fbb6ce';
+                            ctx.strokeStyle = '#d53f8c';
+                        } else {
+                            ctx.fillStyle = '#667eea';
+                            ctx.strokeStyle = '#667eea';
+                        }
+                    } else {
+                        ctx.fillStyle = '#4a5568';
+                        ctx.strokeStyle = '#667eea';
+                    }
+                    
                     ctx.fillRect(x, currentY, cellWidth, podiumHeight);
-                    ctx.strokeStyle = '#667eea';
                     ctx.strokeRect(x, currentY, cellWidth, podiumHeight);
                     
-                    ctx.fillStyle = 'white';
+                    // 设置文字颜色
+                    if (this.seatingResult.left && this.seatingResult.left.gender === '男') {
+                        ctx.fillStyle = '#22543d';
+                    } else if (this.seatingResult.left && this.seatingResult.left.gender === '女') {
+                        ctx.fillStyle = '#97266d';
+                    } else {
+                        ctx.fillStyle = 'white';
+                    }
+                    
                     ctx.font = '12px Arial, sans-serif';
                     ctx.textAlign = 'center';
                     const text = this.seatingResult.left ? this.seatingResult.left.name : '左护法';
@@ -917,12 +1031,34 @@ class SeatingArrangement {
                     ctx.fillText('讲台', x + cellWidth/2, currentY + podiumHeight/2);
                 } else if (col === middleCol + 1 && params.deskRightSit) {
                     // 右护法
-                    ctx.fillStyle = this.seatingResult.right ? '#667eea' : '#4a5568';
+                    if (this.seatingResult.right) {
+                        if (this.seatingResult.right.gender === '男') {
+                            ctx.fillStyle = '#c6f6d5';
+                            ctx.strokeStyle = '#38a169';
+                        } else if (this.seatingResult.right.gender === '女') {
+                            ctx.fillStyle = '#fbb6ce';
+                            ctx.strokeStyle = '#d53f8c';
+                        } else {
+                            ctx.fillStyle = '#667eea';
+                            ctx.strokeStyle = '#667eea';
+                        }
+                    } else {
+                        ctx.fillStyle = '#4a5568';
+                        ctx.strokeStyle = '#667eea';
+                    }
+                    
                     ctx.fillRect(x, currentY, cellWidth, podiumHeight);
-                    ctx.strokeStyle = '#667eea';
                     ctx.strokeRect(x, currentY, cellWidth, podiumHeight);
                     
-                    ctx.fillStyle = 'white';
+                    // 设置文字颜色
+                    if (this.seatingResult.right && this.seatingResult.right.gender === '男') {
+                        ctx.fillStyle = '#22543d';
+                    } else if (this.seatingResult.right && this.seatingResult.right.gender === '女') {
+                        ctx.fillStyle = '#97266d';
+                    } else {
+                        ctx.fillStyle = 'white';
+                    }
+                    
                     ctx.font = '12px Arial, sans-serif';
                     const text = this.seatingResult.right ? this.seatingResult.right.name : '右护法';
                     ctx.fillText(text, x + cellWidth/2, currentY + podiumHeight/2);
@@ -997,28 +1133,43 @@ class SeatingArrangement {
 
     // 准备导出数据
     prepareExportData() {
+        const { data } = this.prepareExportDataWithGender();
+        return data;
+    }
+    
+    // 准备带有性别信息的导出数据
+    prepareExportDataWithGender() {
         const params = this.getParameters();
         const data = [];
+        const genderData = [];
         
         // 添加讲台行
         if (params.deskLeftSit || params.deskRightSit) {
             const teacherRow = new Array(params.cols).fill('');
+            const teacherGenderRow = new Array(params.cols).fill('');
             const middle = Math.floor(params.cols / 2);
             
             teacherRow[middle] = '讲台';
+            teacherGenderRow[middle] = '讲台';
+            
             if (this.seatingResult.left && middle > 0) {
                 teacherRow[middle - 1] = this.seatingResult.left.name;
+                teacherGenderRow[middle - 1] = this.seatingResult.left.gender;
             }
             if (this.seatingResult.right && middle < params.cols - 1) {
                 teacherRow[middle + 1] = this.seatingResult.right.name;
+                teacherGenderRow[middle + 1] = this.seatingResult.right.gender;
             }
             
             data.push(teacherRow);
+            genderData.push(teacherGenderRow);
         }
         
         // 添加普通座位行
         for (let row = 0; row < params.rows; row++) {
             const rowData = [];
+            const rowGenderData = [];
+            
             for (let col = 0; col < params.cols; col++) {
                 const key = `${row},${col}`;
                 const seatData = this.seatingResult[key];
@@ -1026,19 +1177,25 @@ class SeatingArrangement {
                 if (seatData) {
                     if (seatData.type === 'corridor') {
                         rowData.push('走廊');
+                        rowGenderData.push('走廊');
                     } else if (seatData.type === 'empty') {
                         rowData.push('');
+                        rowGenderData.push('');
                     } else {
                         rowData.push(seatData.name);
+                        rowGenderData.push(seatData.gender);
                     }
                 } else {
                     rowData.push('');
+                    rowGenderData.push('');
                 }
             }
+            
             data.push(rowData);
+            genderData.push(rowGenderData);
         }
         
-        return data;
+        return { data, genderData };
     }
 
     // 显示加载动画
