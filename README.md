@@ -196,4 +196,4 @@ seating-arrangement-system-web/
 
 **Powered by Himalaya**
 
-如有问题或建议，请提交 [Issue](https://github.com/your-username/seating-arrangement-system/issues) 或联系开发团队。
+如有问题或建议，请提交 [Issue](https://github.com/Himalaya-art/Seating-Plan-Arrangement-Web/issues) 或联系开发团队。
