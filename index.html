@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>座位安排系统</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-chair"></i> 座位安排系统</h1>
+            <p>智能座位分配，支持多种排列方式</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="panel-section">
+                    <h3><i class="fas fa-cog"></i> 基本设置</h3>
+                    
+                    <!-- File Upload -->
+                    <div class="form-group">
+                        <label for="fileInput">
+                            <i class="fas fa-upload"></i> 导入名单文件
+                        </label>
+                        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.txt">
+                        <div class="file-info" id="fileInfo"></div>
+                    </div>
+
+                    <!-- Grid Settings -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rows">行数</label>
+                            <input type="number" id="rows" value="7" min="1" max="20">
+                        </div>
+                        <div class="form-group">
+                            <label for="cols">列数</label>
+                            <input type="number" id="cols" value="11" min="1" max="20">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3><i class="fas fa-users"></i> 讲台设置</h3>
+                    <div class="form-row">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="leftDesk">
+                            <label for="leftDesk">左护法</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="rightDesk" checked>
+                            <label for="rightDesk">右护法</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3><i class="fas fa-sort"></i> 排列方式</h3>
+                    
+                    <div class="arrangement-options">
+                        <div class="radio-group">
+                            <input type="radio" id="randomArrange" name="arrangeType" value="random" checked>
+                            <label for="randomArrange">随机排列</label>
+                        </div>
+                        
+                        <div class="radio-group">
+                            <input type="radio" id="genderArrange" name="arrangeType" value="gender">
+                            <label for="genderArrange">按性别排列</label>
+                        </div>
+                        
+                        <div class="radio-group">
+                            <input type="radio" id="corridorArrange" name="arrangeType" value="corridor">
+                            <label for="corridorArrange">按走廊排列</label>
+                        </div>
+                    </div>
+
+                    <!-- Gender Settings -->
+                    <div class="gender-settings" style="display: none;">
+                        <div class="form-group">
+                            <label for="genderGroup">连续性别数量</label>
+                            <input type="number" id="genderGroup" value="3" min="1" max="10">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3><i class="fas fa-road"></i> 走廊设置</h3>
+                    <div class="corridor-settings">
+                        <p>选择走廊位置（列号）：</p>
+                        <div class="corridor-checkboxes" id="corridorCheckboxes">
+                            <!-- 动态生成走廊复选框 -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="generateBtn">
+                            <i class="fas fa-magic"></i> 生成座位表
+                        </button>
+                        <button class="btn btn-secondary" id="clearBtn">
+                            <i class="fas fa-trash"></i> 清空
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seating Layout -->
+            <div class="seating-layout">
+                <div class="layout-header">
+                    <h3><i class="fas fa-th"></i> 座位布局</h3>
+                    <div class="layout-controls">
+                        <button class="btn btn-small" id="editModeBtn">
+                            <i class="fas fa-edit"></i> 编辑模式
+                        </button>
+                        <button class="btn btn-small" id="exportBtn" style="display: none;">
+                            <i class="fas fa-download"></i> 导出
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Blackboard -->
+                <div class="blackboard">
+                    <div class="blackboard-content">
+                        <span>黑板</span>
+                        <div class="teacher-area">
+                            <div class="teacher-seat left" id="leftTeacher"></div>
+                            <div class="podium">讲台</div>
+                            <div class="teacher-seat right" id="rightTeacher"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seating Grid -->
+                <div class="seating-grid" id="seatingGrid">
+                    <!-- 动态生成座位 -->
+                </div>
+
+                <!-- Legend -->
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="seat-demo occupied"></div>
+                        <span>已占用座位</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="seat-demo empty"></div>
+                        <span>空座位</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="seat-demo corridor"></div>
+                        <span>走廊</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="seat-demo male"></div>
+                        <span>男生</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="seat-demo female"></div>
+                        <span>女生</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Panel -->
+        <div class="stats-panel" id="statsPanel" style="display: none;">
+            <h3><i class="fas fa-chart-bar"></i> 统计信息</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">总学生数</span>
+                    <span class="stat-value" id="totalStudents">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">男生</span>
+                    <span class="stat-value" id="maleCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">女生</span>
+                    <span class="stat-value" id="femaleCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">已安排座位</span>
+                    <span class="stat-value" id="assignedSeats">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">空余座位</span>
+                    <span class="stat-value" id="emptySeats">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-download"></i> 导出座位表</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="export-options">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="exportExcel" checked>
+                        <label for="exportExcel">Excel文件</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="exportCSV">
+                        <label for="exportCSV">CSV文件</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="exportPNG">
+                        <label for="exportPNG">PNG图片</label>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" id="confirmExport">
+                        <i class="fas fa-download"></i> 开始导出
+                    </button>
+                    <button class="btn btn-secondary" id="cancelExport">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>正在生成座位表...</p>
+        </div>
+    </div>
+
+    <!-- Toast Messages -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="scripts.js"></script>
+</body>
+</html>
