@@ -707,15 +707,57 @@ class SeatingArrangement {
         document.getElementById('femaleCount').textContent = femaleCount;
 
         if (this.seatingResult) {
-            const assignedSeats = Object.values(this.seatingResult).filter(
-                seat => seat && seat.type !== 'empty' && seat.type !== 'corridor'
-            ).length;
-            
             const params = this.getParameters();
-            const totalSeats = (params.cols - params.corridor.length) * params.rows;
             
-            document.getElementById('assignedSeats').textContent = assignedSeats;
-            document.getElementById('emptySeats').textContent = totalSeats - assignedSeats;
+            // 计算已安排的学生座位（包括左右护法）
+            let assignedStudentSeats = 0;
+            let regularStudentSeats = 0;
+            let teacherSeats = 0;
+            
+            // 统计普通座位中的学生（排除走廊和空座位）
+            Object.entries(this.seatingResult).forEach(([key, seat]) => {
+                // 跳过left和right护法座位，这些会单独统计
+                if (key === 'left' || key === 'right') return;
+                
+                // 检查是否是有效的学生座位
+                if (seat && seat.name && seat.type !== 'empty' && seat.type !== 'corridor') {
+                    regularStudentSeats += 1;
+                }
+            });
+            
+            // 统计左右护法
+            if (this.seatingResult.left && this.seatingResult.left.name) {
+                teacherSeats += 1;
+            }
+            if (this.seatingResult.right && this.seatingResult.right.name) {
+                teacherSeats += 1;
+            }
+            
+            assignedStudentSeats = regularStudentSeats + teacherSeats;
+            
+            // 总可用座位数 = 普通座位（扣除走廊）+ 护法座位
+            const regularSeatsTotal = (params.cols - params.corridor.length) * params.rows;
+            const teacherSeatsTotal = (params.deskLeftSit ? 1 : 0) + (params.deskRightSit ? 1 : 0);
+            const totalAvailableSeats = regularSeatsTotal + teacherSeatsTotal;
+            
+            // 调试信息
+            console.log('统计调试信息:', {
+                regularStudentSeats,
+                teacherSeats,
+                assignedStudentSeats,
+                regularSeatsTotal,
+                teacherSeatsTotal,
+                totalAvailableSeats,
+                params,
+                leftSeat: this.seatingResult.left,
+                rightSeat: this.seatingResult.right
+            });
+            
+            document.getElementById('assignedSeats').textContent = assignedStudentSeats;
+            document.getElementById('emptySeats').textContent = totalAvailableSeats - assignedStudentSeats;
+        } else {
+            document.getElementById('assignedSeats').textContent = 0;
+            document.getElementById('emptySeats').textContent = 0;
         }
     }
 
