@@ -740,18 +740,6 @@ class SeatingArrangement {
             const teacherSeatsTotal = (params.deskLeftSit ? 1 : 0) + (params.deskRightSit ? 1 : 0);
             const totalAvailableSeats = regularSeatsTotal + teacherSeatsTotal;
             
-            // 调试信息
-            console.log('统计调试信息:', {
-                regularStudentSeats,
-                teacherSeats,
-                assignedStudentSeats,
-                regularSeatsTotal,
-                teacherSeatsTotal,
-                totalAvailableSeats,
-                params,
-                leftSeat: this.seatingResult.left,
-                rightSeat: this.seatingResult.right
-            });
             
             document.getElementById('assignedSeats').textContent = assignedStudentSeats;
             document.getElementById('emptySeats').textContent = totalAvailableSeats - assignedStudentSeats;
@@ -888,7 +876,7 @@ class SeatingArrangement {
         let currentY = padding;
         
         // 绘制黑板
-        ctx.fillStyle = '#2d3748';
+        ctx.fillStyle = '#718096';
         ctx.fillRect(padding, currentY, params.cols * cellWidth, blackboardHeight);
         ctx.fillStyle = 'white';
         ctx.font = 'bold 18px Arial, sans-serif';
@@ -956,7 +944,7 @@ class SeatingArrangement {
                 // 设置颜色
                 if (seatData) {
                     if (seatData.type === 'corridor') {
-                        ctx.fillStyle = '#2d3748';
+                        ctx.fillStyle = '#718096';
                         ctx.fillRect(x, y, cellWidth, cellHeight);
                         ctx.fillStyle = 'white';
                         ctx.fillText('走廊', x + cellWidth/2, y + cellHeight/2);
