@@ -847,9 +847,12 @@ class SeatingArrangement {
         const { data, genderData } = this.prepareExportDataWithGender();
         const ws = XLSX.utils.aoa_to_sheet(data);
         
-        // 设置单元格样式
-        if (!ws['!merges']) ws['!merges'] = [];
-        if (!ws['!cols']) ws['!cols'] = [];
+        // 设置列宽
+        const colWidths = [];
+        for (let i = 0; i < data[0].length; i++) {
+            colWidths.push({ wch: 10 });
+        }
+        ws['!cols'] = colWidths;
         
         // 为每个单元格设置样式
         Object.keys(ws).forEach(cell => {
@@ -861,45 +864,77 @@ class SeatingArrangement {
             
             if (genderData[row] && genderData[row][col]) {
                 const gender = genderData[row][col];
-                
+
                 // 设置单元格样式
                 if (!ws[cell].s) ws[cell].s = {};
                 
                 if (gender === '男') {
                     ws[cell].s.fill = {
-                        fgColor: { rgb: "C6F6D5" },
-                        bgColor: { rgb: "C6F6D5" },
-                        patternType: "solid"
+                        patternType: 'solid',
+                        fgColor: { rgb: 'C6F6D5' }
                     };
-                    ws[cell].s.font = { color: { rgb: "22543D" } };
+                    ws[cell].s.font = { 
+                        color: { rgb: '22543D' },
+                        bold: false
+                    };
+                    ws[cell].s.alignment = { horizontal: 'center', vertical: 'center' };
                 } else if (gender === '女') {
                     ws[cell].s.fill = {
-                        fgColor: { rgb: "FBB6CE" },
-                        bgColor: { rgb: "FBB6CE" },
-                        patternType: "solid"
+                        patternType: 'solid',
+                        fgColor: { rgb: 'FBB6CE' }
                     };
-                    ws[cell].s.font = { color: { rgb: "97266D" } };
+                    ws[cell].s.font = { 
+                        color: { rgb: '97266D' },
+                        bold: false
+                    };
+                    ws[cell].s.alignment = { horizontal: 'center', vertical: 'center' };
                 } else if (gender === '走廊') {
                     ws[cell].s.fill = {
-                        fgColor: { rgb: "718096" },
-                        bgColor: { rgb: "718096" },
-                        patternType: "solid"
+                        patternType: 'solid',
+                        fgColor: { rgb: '718096' }
                     };
-                    ws[cell].s.font = { color: { rgb: "FFFFFF" } };
+                    ws[cell].s.font = { 
+                        color: { rgb: 'FFFFFF' },
+                        bold: false
+                    };
+                    ws[cell].s.alignment = { horizontal: 'center', vertical: 'center' };
                 } else if (gender === '讲台') {
                     ws[cell].s.fill = {
-                        fgColor: { rgb: "667EEA" },
-                        bgColor: { rgb: "667EEA" },
-                        patternType: "solid"
+                        patternType: 'solid',
+                        fgColor: { rgb: '667EEA' }
                     };
-                    ws[cell].s.font = { color: { rgb: "FFFFFF" }, bold: true };
+                    ws[cell].s.font = { 
+                        color: { rgb: 'FFFFFF' },
+                        bold: true
+                    };
+                    ws[cell].s.alignment = { horizontal: 'center', vertical: 'center' };
                 }
+                
+                // 添加边框
+                ws[cell].s.border = {
+                    top: { style: 'thin', color: { rgb: '000000' } },
+                    bottom: { style: 'thin', color: { rgb: '000000' } },
+                    left: { style: 'thin', color: { rgb: '000000' } },
+                    right: { style: 'thin', color: { rgb: '000000' } }
+                };
+            } else {
+                // 为空单元格也设置基本样式
+                if (!ws[cell].s) ws[cell].s = {};
+                ws[cell].s.alignment = { horizontal: 'center', vertical: 'center' };
+                ws[cell].s.border = {
+                    top: { style: 'thin', color: { rgb: '000000' } },
+                    bottom: { style: 'thin', color: { rgb: '000000' } },
+                    left: { style: 'thin', color: { rgb: '000000' } },
+                    right: { style: 'thin', color: { rgb: '000000' } }
+                };
             }
         });
         
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, '座位表');
-        XLSX.writeFile(wb, '座位安排表.xlsx');
+
+        // 使用writeFile导出，支持样式的格式
+        XLSX.writeFile(wb, '座位安排表.xlsx', { bookType: 'xlsx', type: 'binary' });
     }
 
     // 导出到CSV
