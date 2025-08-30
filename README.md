@@ -29,32 +29,36 @@
 - 无需安装，直接打开即可使用
 
 ### 使用方法
-1. **下载项目**
-   ```bash
-   git clone https://github.com/your-username/seating-arrangement-system.git
-   cd seating-arrangement-system
-   ```
 
-2. **打开应用**
-   - 直接双击 `index.html` 文件
-   - 或使用本地服务器：
-     ```bash
-     # Python 3
-     python -m http.server 8000
-     
-     # Node.js
-     npx http-server
-     
-     # PHP
-     php -S localhost:8000
-     ```
+1. [在线使用](https://himalaya-art.github.io/Seating-Plan-Arrangement-Web/)
 
-3. **开始使用**
-   - 上传学生名单文件
-   - 设置座位行列数
-   - 选择排列模式
-   - 生成座位表
-   - 导出或编辑结果
+2. 或本地使用
+   1. **下载项目**
+      ```bash
+      git clone https://github.com/your-username/seating-arrangement-system.git
+      cd seating-arrangement-system
+      ```
+
+   2. **打开应用**
+      - 直接双击 `index.html` 文件
+      - 或使用本地服务器：
+      ```bash
+      # Python 3
+      python -m http.server 8000
+     
+      # Node.js
+      npx http-server
+     
+      # PHP
+      php -S localhost:8000
+      ```
+
+   3. **开始使用**
+      - 上传学生名单文件
+      - 设置座位行列数
+      - 选择排列模式
+      - 生成座位表
+      - 导出或编辑结果
 
 ##  文件格式
 
